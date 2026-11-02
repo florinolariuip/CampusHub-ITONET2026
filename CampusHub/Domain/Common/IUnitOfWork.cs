@@ -1,6 +1,6 @@
 namespace CampusHub.Domain.Common;
 
-public class IUnitOfWork
+public interface IUnitOfWork
 {
-    
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

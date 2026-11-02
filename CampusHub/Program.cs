@@ -1,12 +1,34 @@
+using CampusHub.Common.CQRS;
+using CampusHub.Domain.Common;
+using CampusHub.Domain.Events;
+using CampusHub.Domain.Participants;
+using CampusHub.Feature.Events.CreateEvent;
+using CampusHub.Feature.Events.GetEventById;
+using CampusHub.Infrastructure.Persistence;
+using CampusHub.Infrastructure.Persistence.Repository;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddDbContext<CampusHubDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("CampusHubDB")));
+
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CampusHubDbContext>());
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
+
+builder.Services.AddHandlers(typeof(Program).Assembly);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CampusHubDbContext>();
+    db.Database.EnsureCreated();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -14,28 +36,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+var events = app.MapGroup("/events");
+CreateEventEndpoint.Map(events);
+GetEventByIdEndpoint.Map(events);
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
