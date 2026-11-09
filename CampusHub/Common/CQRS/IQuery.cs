@@ -1,6 +1,5 @@
 namespace CampusHub.Common.CQRS;
 
-public class IQuery
+public interface IQuery<TResult>
 {
-    
 }

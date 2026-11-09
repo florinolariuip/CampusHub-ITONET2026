@@ -54,4 +54,20 @@ public sealed class Event
             Version = 1
         });
     }
+
+    public Result<Unit> Publish(DateTime date)
+    {
+        if (Status == EventStatus.Cancelled)
+        {
+            return Result<Unit>.Failure(EventErrors.EventAlreadyCancelled);
+        }
+        
+        if (Status == EventStatus.Published)
+        {
+            return Result<Unit>.Failure(EventErrors.EventAlreadyPublished);
+        }
+        
+        Status = EventStatus.Published;
+        return Result<Unit>.Success(Unit.Value);
+    }
 }

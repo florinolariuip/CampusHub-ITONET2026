@@ -1,6 +1,5 @@
 namespace CampusHub.Common.CQRS;
 
-public class ICommand
+public interface ICommand<TResult>
 {
-    
 }

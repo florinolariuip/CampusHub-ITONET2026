@@ -2,8 +2,11 @@ using CampusHub.Common.CQRS;
 using CampusHub.Domain.Common;
 using CampusHub.Domain.Events;
 using CampusHub.Domain.Participants;
+using CampusHub.Domain.Registrations;
 using CampusHub.Feature.Events.CreateEvent;
 using CampusHub.Feature.Events.GetEventById;
+using CampusHub.Feature.Events.PublishEvent;
+using CampusHub.Feature.Registrations;
 using CampusHub.Infrastructure.Persistence;
 using CampusHub.Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +21,7 @@ builder.Services.AddDbContext<CampusHubDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CampusHubDbContext>());
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
+builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
 
 builder.Services.AddHandlers(typeof(Program).Assembly);
 
@@ -39,5 +43,9 @@ app.UseHttpsRedirection();
 var events = app.MapGroup("/events");
 CreateEventEndpoint.Map(events);
 GetEventByIdEndpoint.Map(events);
+PublishEventEndpoint.Map(events);
+
+var registrations = app.MapGroup("/registrations");
+RegisterForEventEndpoint.Map(registrations);
 
 app.Run();
